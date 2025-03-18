@@ -52,6 +52,38 @@ int main()
                                 op2 = pop();
                                 push(((int)pop()) % (int)op2);
                                 break;
+                        case '?':
+                                if (sp > 0)
+                                        printf("Prints the TOP: %g\n", val[sp - 1]);
+                                else
+                                        printf("error: stack is empty (?)\n");
+                                break;
+                        case 'd':
+                                if (sp > 0) {
+                                        push(val[sp - 1]);
+                                        printf("Dublicated top element: %g\n", val[sp - 1]);
+                                } else
+                                        printf("error: stack is empty (d)\n");
+                                break;
+                        case 's':
+                                if (sp > 1) {
+                                        printf("Swapping... %g and %g\n", val[sp - 1], val[sp - 2]);
+                                        double temp = val[sp - 1];
+                                        val[sp - 1] = val[sp - 2];
+                                        val[sp - 2] = temp;
+                                        printf("Swapped... %g and %g\n", val[sp - 1], val[sp - 2]);
+                                } else {
+                                        printf("error: not enough elements to swap\n");
+                                }
+                                break;
+                        case 'c':
+                                if (sp > 0) {
+                                        printf("Clearing stack...\n");
+                                        sp = 0;
+                                } else {
+                                        printf("error: not element to clear\n");
+                                }
+                                break;
                         case '\n':
                                 printf("Result: %.8g\n", pop()); // Print final result
                                 break;
@@ -70,7 +102,6 @@ void push(double f)
                 val[sp++] = f;
         else
                 printf("error: stack full, can't push %g\n",f);
-
 }
 
 double pop(void)
