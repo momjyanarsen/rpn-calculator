@@ -1,17 +1,30 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <ctype.h>
+#include <math.h>
+#include <string.h>
 
-#define MAXOP           100
-#define NUMBER          '\0'
-#define BUFFSIZE        100
-#define MAXVAL          100
+
+#define NUMBER		'\0'
+#define SIN		-2
+#define COS		-3
+#define POW		-4
+#define EXP		-5
+#define EINVAL		-22
+
+#define MAXOP		100
+#define BUFFSIZE	100
+#define MAXVAL		100
+
+#define M_PI 3.14159265358979323846
+
 
 int getop(char []);
 void push(double);
 double pop(void);
 int getch(void);
 void ungetch(int);
+int check_math(char c);
 
 int buffer[BUFFSIZE];
 int bufp = 0;
@@ -83,6 +96,21 @@ int main()
 					printf("error: not element to clear\n");
 				}
 				break;
+			case SIN:
+				op2 = pop();
+				push(sin(op2 * M_PI / 180.0));
+				break;
+			case COS:
+				op2 = pop();
+				push(cos(op2 * M_PI / 180.0));
+				break;
+			case POW:
+				op2 = pop();
+				push(pow(pop(),  op2));
+				break;
+			case EXP:
+				push(exp(pop()));
+				break;
 			case '\n':
 				printf("Result: %.8g\n", pop()); // Print final result
 				break;
@@ -115,7 +143,7 @@ double pop(void)
 
 int getop(char s[])
 {
-	int i = 0, c, next;
+	int i = 0, c, next, next_mth;
 
 	while((s[0] = c = getch()) == ' ' || c == '\t')
 		;
@@ -123,8 +151,16 @@ int getop(char s[])
 	/* If not digit */
 	s[1] = '\0';
 
-	if (!isdigit(c) && c != '.' && c != '-')
-		return c;
+	if (!isdigit(c) && c != '.' && c != '-') {
+		if (isalpha(c)) {
+			int ret_math;
+			ret_math = check_math(c);
+			s[3] = '\0';
+			return ret_math;
+		} else {
+			return c;
+		}
+	}
 
 	if (c == '-') {
 		next = getch();
@@ -135,7 +171,7 @@ int getop(char s[])
 		s [i = 1] = c = next;
 	}
 
-	if ( isdigit(c))
+	if (isdigit(c))
 		while(isdigit(s[++i] = c = getch()))
 			;
 
@@ -159,4 +195,33 @@ void ungetch(int c)
 		printf("ungetch: too many characters\n");
 	else
 		buffer[bufp++] = c;
+}
+
+int check_math(char c)
+{
+	int ret = -EINVAL, i = 1;
+	char str[3];
+
+	str[0] = c;
+
+	while (i < 3)
+	{
+		c = getch();
+		str[i] = c;
+		i++;
+	}
+
+	if (!strcmp(str, "sin")) {
+		ret = SIN;
+	} else if (!strcmp(str, "cos")) {
+		ret = COS;
+	} else if (!strcmp(str, "pow")) {
+		ret = POW;
+	} else if (!strcmp(str, "exp")) {
+		ret = EXP;
+	} else {
+		printf("Math operation is invalid: %s.\n", str);
+	}
+
+	return ret;
 }
