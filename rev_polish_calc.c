@@ -1,8 +1,14 @@
+/*
+	gcc -o rev_polish_calc rev_polish_calc.c -lm
+*/
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <ctype.h>
 #include <math.h>
 #include <string.h>
+#include <stdbool.h>
+#include <sys/types.h>
 
 
 #define NUMBER		'\0'
@@ -10,14 +16,16 @@
 #define COS		-3
 #define POW		-4
 #define EXP		-5
+#define VAR		-6
 #define EINVAL		-22
 
 #define MAXOP		100
 #define BUFFSIZE	100
 #define MAXVAL		100
+#define MAXVAR		26
 
 #define M_PI 3.14159265358979323846
-
+bool has_variable = 0;
 
 int getop(char []);
 void push(double);
@@ -25,6 +33,8 @@ double pop(void);
 int getch(void);
 void ungetch(int);
 int check_math(char c);
+int getvars(int v[]);
+void printvars(int v[]);
 
 int buffer[BUFFSIZE];
 int bufp = 0;
@@ -34,14 +44,29 @@ double val[MAXVAL];
 
 int main()
 {
-	int type;
-	double op2;
+	int v[MAXVAR] = {0};
 	char s[MAXOP];
+	int isvar = 0;
+	double op2;
+	int type;
 
+	memset(v, 0, MAXVAR);
+
+	printf("Enter Variables [A-Z] <10 D 20 C> or press [Enter] to skip...\n");
+	while(!(getvars(v)))
+		;
+	printvars(v);
+
+	printf("Enter expression..\n");
 	while((type = getop(s)) != EOF) {
 		switch(type) {
 			case NUMBER:
 				push(atof(s));
+				break;
+			case VAR:
+				push(v[s[0] - 'A']);
+				break;
+			case '=':
 				break;
 			case '+':
 				push(pop() + pop());
@@ -151,6 +176,13 @@ int getop(char s[])
 	/* If not digit */
 	s[1] = '\0';
 
+	if (isupper(c) && has_variable) {
+		s[0] = c;
+		return VAR;
+	} else {
+		printf("Invalid usage of variables please run again\n");
+	}
+
 	if (!isdigit(c) && c != '.' && c != '-') {
 		if (isalpha(c)) {
 			int ret_math;
@@ -224,4 +256,51 @@ int check_math(char c)
 	}
 
 	return ret;
+}
+
+/* Return 1 if not getting otherwise */
+int getvars(int vars[])
+{
+	int i = 0, c;
+	char s[20];
+
+	if ((s[0] = c = getch()) == '\n') { return 1; }
+	else { ungetch(c); }
+
+	while((s[0] = c = getch()) == ' ' || c == '\t')
+		;
+
+	s[1] = '\0';
+
+	// Getting digit inot s[]
+	if (isdigit(c))
+		while(isdigit(s[++i] = c = getch()))
+			;
+
+	// Getting Variables
+	if (!isalpha(c)) {
+		while(isalpha(c = getch())) {
+			if (isupper(c)) {
+				vars[c - 'A'] = atoi(s);
+				has_variable = 1;
+			} else {
+				printf("[%c] is not upper case!\n", c);
+				continue;
+			}
+		}
+	}
+
+	s[i] = '\0';
+	if (c == '\n')	{ return 1; }
+
+	return 0;
+}
+
+void printvars(int v[]) {
+
+	printf("Variables -> ");
+	for (int i = 0; i < MAXVAR; i++) {
+		printf("%d ", v[i]);
+	}
+	printf("\n");
 }
