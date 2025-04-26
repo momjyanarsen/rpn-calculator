@@ -176,11 +176,13 @@ int getop(char s[])
 	/* If not digit */
 	s[1] = '\0';
 
-	if (isupper(c) && has_variable) {
-		s[0] = c;
-		return VAR;
-	} else {
-		printf("Invalid usage of variables please run again\n");
+	if (isupper(c)) {
+		if (has_variable) {
+			s[0] = c;
+			return VAR;
+		} else {
+			printf("Invalid usage of variables please run again\n");
+		}
 	}
 
 	if (!isdigit(c) && c != '.' && c != '-') {
